@@ -1,7 +1,7 @@
 const {db} = require('../Schema/connect');
 const UserSchema = require('../Schema/user');
 const encrypt = require('../utils/crypt');
-//通过db对象创建操作users数据库的模型对象
+//通过db对象创建操作blogproject数据库下的users集合的模型对象
 const Users = db.model('users',UserSchema);
 
 //用户注册
@@ -87,7 +87,27 @@ exports.login = async (ctx)=>{
         })
 
         //让用户在他的cookie里设置username password加密后的密码 权限
-
+        //cookies的signed默认true
+        ctx.cookies.set('username',username,{
+            domain:"localhost", //挂载的主机名
+            path:'/', //在当前主机的什么路径下cookie里的值可以访问到
+            maxAge:36e5,
+            httpOnly:true,//不让客户端访问这条cookie
+            overwrite:false,
+            //signed:false
+        })
+        ctx.cookies.set('uid',data[0]._id,{
+            domain:"localhost", //挂载的主机名 / 域名
+            path:'/', //在当前主机的什么路径下cookie里的值可以访问到
+            maxAge:36e5,
+            httpOnly:true,//不让客户端访问这条cookie
+            overwrite:false,
+            //signed:false
+        })
+        // ctx.session = {
+        //     username,
+        //     uid:data[0]._id
+        // }
         //登录成功
         await ctx.render('isOk',{
             status:"登录成功"
@@ -98,4 +118,31 @@ exports.login = async (ctx)=>{
             status:"登录失败"
         })
     })
+}
+
+//保持用户状态
+exports.keepLog = async (ctx,next)=>{
+    //确认当前的session对象是不是全新对象
+    if(ctx.session.isNew){//session没有
+        if(ctx.cookies.get("uid")){
+            ctx.session={
+                username:ctx.cookies.get('username'),
+                uid:ctx.cookies.get('uid')
+            }
+        }
+    }
+    await next();
+}
+
+//用户退出
+exports.logout = async ctx=>{
+    ctx.session = null;
+    ctx.cookies.set("username",null,{
+        maxAge:0
+    });
+    ctx.cookies.set("uid",null,{
+        maxAge:0
+    });
+    //重定向到 根
+    ctx.redirect("/");
 }
