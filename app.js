@@ -4,13 +4,20 @@ const Koa = require('koa'),
 const logger = require('koa-logger');
 const router = require('./routers/router');
 const {join} = require('path');
+const body = require('koa-body');
 
 //生成koa实例
 const app = new Koa;
+
 //注册日志模块
 app.use(logger())
+
+//配置koa-body处理post请求数据
+app.use(body())
+
 //配置静态资源目录
 app.use(static(join(__dirname,'public')))
+
 //配置视图模板
 app.use(views(join(__dirname,'views'),{
     extension:'pug'
