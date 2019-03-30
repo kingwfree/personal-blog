@@ -42,4 +42,7 @@ router.get('/user/logout',user.logout)
 //文章的发表页面
 router.get("/article",user.keepLog,article.addPage)
 
+//文章添加
+router.post('/article',user.keepLog,article.add)
+
 module.exports = router
