@@ -4,14 +4,7 @@ const article = require('../control/article');
 const router = new Router
 
 //设计主页
-router.get('/',user.keepLog,async(ctx)=>{
-    //需要title属性 
-
-    await ctx.render('index',{
-        title:"blog",
-        session:ctx.session
-    })
-})
+router.get('/',user.keepLog,article.getList)
 
 //:id这部分是动态路由，主要用来用户 登录 注册
 // router.get('/user/:id',(ctx)=>{
@@ -44,5 +37,9 @@ router.get("/article",user.keepLog,article.addPage)
 
 //文章添加
 router.post('/article',user.keepLog,article.add)
+
+//文章列表分页路由
+router.get("/page/:id",article.getList)
+
 
 module.exports = router

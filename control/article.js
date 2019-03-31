@@ -1,9 +1,12 @@
 const {db} = require('../Schema/connect');
 const ArticleSchema = require('../Schema/article');
 
+//取用户的Schema，为了拿到操作 users 集合的实例对象
+const UserSchema = require('../Schema/user');
+
 //通过db对象创建操作blogproject数据库下的articles集合的模型对象
 const Article = db.model('articles',ArticleSchema);
-
+const Users = db.model('users',UserSchema);
 //返回文章发表页
 exports.addPage = async (ctx)=>{
     await ctx.render('add-article',{
@@ -26,7 +29,7 @@ exports.add = async ctx=>{
     const data = ctx.request.body
     // title content tips     author
     // 添加文章作者
-    data.author = ctx.session.username
+    data.author = ctx.session.uid
 
     await new Promise((resolve,reject)=>{
         new Article(data)
@@ -48,6 +51,46 @@ exports.add = async ctx=>{
         }
     })
     
+
+
+}
+
+//获取文章列表
+exports.getList = async ctx=>{
+    //获取头像
+    //动态路由的id值 ctx.params.id
+    let page = ctx.params.id || 1;
+    //传值 then exec
+    // Article
+    //     .find(()=>{})
+    // Article
+    //     .find()
+    //     .then(()=>{})
+    // Article
+    //     .find()
+    //     .exec(()=>{})
+    const artList = await Article
+        .find()
+        .sort('-created') //-created 根据created降序排序 created 根据created升序排序
+        .skip(5*(page-1))
+        .limit(5)
+        .populate({
+            path:'author',
+            select:'username _id avatar'
+        })   //mongoose用于连表查询
+        .then(data=>data)
+        .catch(err=>{
+            console.log(err);
+        })
+
+    await ctx.render('index',{
+        session:ctx.session,
+        title:"blog",
+        artList
+    })
+
+
+
 
 
 }
