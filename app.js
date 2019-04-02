@@ -47,3 +47,35 @@ app.use(router.routes())
 app.listen(3000,()=>{
     console.log('项目启动成功，监听在3000端口');
 })
+
+//创建管理员用户 如果管理员用户已经存在 则返回
+{
+    const {db} = require('./Schema/connect');
+    const UserSchema = require('./Schema/user');
+    const encrpty = require('./utils/crypt')
+    //通过db对象创建操作blogproject数据库下的users集合的模型对象
+    const Users = db.model('users',UserSchema);
+
+    Users.find({username:"admin"})
+        .then(data=>{
+            if(data.length === 0){
+                //管理员不存在 创建
+                new Users({
+                    username:'admin',
+                    password:encrpty('admin'),
+                    role:666666,
+                    commentNum:0,
+                    articleNum:0
+                })
+                .save()
+                .then(data=>{
+                    console.log('管理员用户名 -》 admin,密码-》admin')
+                })
+                .catch(err=>{
+                    console.log(err);
+                })
+            }else{
+                console.log('管理员用户名 -》 admin,密码-》admin')
+            }
+        })
+}

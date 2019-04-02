@@ -57,9 +57,9 @@ block contents
             //-     这是评论的内容
             each info in comment
               li
-                img(src=info.from.avatar)
+                img(src=info.author.avatar)
                 div
-                  p.author= info.from.username
+                  p.author= info.author.username
                   p.time= info.created.toLocaleString()
                 .she-said!= info.content
 
