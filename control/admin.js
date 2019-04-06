@@ -1,15 +1,9 @@
+const Article = require('../Models/article');
+const Users = require('../Models/user');
+const Comment = require('../Models/comment');
+
 const fs = require('fs');
 const {join} = require('path');
-const {db} = require('../Schema/connect');
-const CommentSchema = require('../Schema/comment');
-const ArticleSchema = require('../Schema/article');
-//取用户的Schema，为了拿到操作 users 集合的实例对象
-const UserSchema = require('../Schema/user');
-
-//通过db对象创建操作blogproject数据库下的articles集合的模型对象
-const Article = db.model('articles',ArticleSchema);
-const Users = db.model('users',UserSchema);
-const Comment = db.model('comments',CommentSchema);
 
 exports.index = async ctx=>{
     if(ctx.session.isNew){

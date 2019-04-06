@@ -1,8 +1,5 @@
-const {db} = require('../Schema/connect');
-const UserSchema = require('../Schema/user');
+const Users = require('../Models/user');
 const encrypt = require('../utils/crypt');
-//通过db对象创建操作blogproject数据库下的users集合的模型对象
-const Users = db.model('users',UserSchema);
 
 //用户注册
 exports.reg = async ( ctx )=>{
@@ -106,6 +103,7 @@ exports.login = async (ctx)=>{
             overwrite:false,
             //signed:false
         })
+        
         ctx.session = {
             username,
             uid:data[0]._id,
@@ -126,20 +124,38 @@ exports.login = async (ctx)=>{
 
 //保持用户状态
 exports.keepLog = async (ctx,next)=>{
+    const uid = ctx.cookies.get("uid");
     //确认当前的session对象是不是全新对象
     if(ctx.session.isNew){//session没有
-        if(ctx.cookies.get("uid")){
+        if(uid){
+            const data = await Users
+                                    .findById(uid)
+                                    .then(data=>data)
+            
             ctx.session={
                 username:ctx.cookies.get('username'),
-                uid:ctx.cookies.get('uid')
+                uid,
+                avatar:data.avatar,
+                role:data.role
+
             }
         }
+    }else{
+        const data = await Users
+                                .findById(uid)
+                                .then(data=>data)
+            ctx.session={
+                username:ctx.cookies.get('username'),
+                uid,
+                avatar:data.avatar,
+                role:data.role
+            }
     }
     await next();
 }
 
 //用户退出
-exports.logout = async ctx=>{
+exports.logout = ctx=>{
     ctx.session = null;
     ctx.cookies.set("username",null,{
         maxAge:0
@@ -149,4 +165,56 @@ exports.logout = async ctx=>{
     });
     //重定向到 根
     ctx.redirect("/");
+}
+
+//用户头像上传
+exports.upload = async ctx=>{
+    //console.log(ctx.req.file);
+    const filename = ctx.req.file.filename;
+    let data = {}
+    await Users.update({_id:ctx.session.uid},{$set:{avatar:'/avatar/'+filename}},(err,res)=>{
+        if(err){
+            data={
+                status:0,
+                message:'上传失败'
+            }
+        }else{
+            data={
+                status:1,
+                message:'上传成功'
+            }
+        }
+    })
+    ctx.body = data;
+
+}
+
+//后台 获取所有用户
+exports.userlist = async ctx =>{
+    const data = await Users.find();
+    ctx.body = {
+        code:0,
+        data
+    }
+}
+
+//后台 删除用户
+exports.del = async ctx=>{
+    const _id = ctx.params.id;
+    //console.log(_id);
+    let res={
+        state:1,
+        message:'删除成功'
+    };
+    await Users
+            .findById(_id)
+            .then(data=>data.remove())
+            .catch(err=>{
+                res={
+                    state:0,
+                    message:err
+                }
+            })
+    ctx.body = res;
+    
 }

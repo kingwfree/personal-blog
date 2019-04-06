@@ -14,5 +14,19 @@ const UserSchema = new Schema({
     commentNum:Number
 },{versionKey:false});
 
+UserSchema.post('remove',document=>{
+    const Article = require('../Models/article');
+    const Comment = require('../Models/comment');
+
+    const {_id} = document;
+
+    //删除所有文章
+    Article
+        .find({author:_id})
+        .then(data=>data.forEach(item=>item.remove()))
+    Comment
+        .find({author:_id})
+        .then(data=>data.forEach(item=>item.remove()))
+})
 
 module.exports = UserSchema

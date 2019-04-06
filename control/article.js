@@ -1,13 +1,6 @@
-const {db} = require('../Schema/connect');
-const ArticleSchema = require('../Schema/article');
-const CommentSchema = require('../Schema/comment');
-//取用户的Schema，为了拿到操作 users 集合的实例对象
-const UserSchema = require('../Schema/user');
-
-//通过db对象创建操作blogproject数据库下的articles集合的模型对象
-const Article = db.model('articles',ArticleSchema);
-const Users = db.model('users',UserSchema);
-const Comment = db.model('comments',CommentSchema);
+const Article = require('../Models/article');
+const Users = require('../Models/user');
+const Comment = require('../Models/comment');
 //返回文章发表页
 exports.addPage = async (ctx)=>{
     await ctx.render('add-article',{
@@ -36,7 +29,7 @@ exports.add = async ctx=>{
         new Article(data)
             .save((err,data)=>{
                 if(err)return reject(err);
-                //用户文章计数
+                //用户文章计数 {$inc:{articleNum:1}每提交一次加一
                 Users.update({_id:data.author},{$inc:{articleNum:1}},err=>{
                     if(err)return console.log(err);
                 })
@@ -93,7 +86,20 @@ exports.getList = async ctx=>{
         .catch(err=>{
             console.log(err);
         })
-
+    //console.log(artList);
+     /* 
+        [ { _id: 5ca8434fac62a23b28f0da8f,
+            tips: 'nodejs',
+            title: 'ddd',
+            content: 'ddd',
+            author:
+            { avatar: '/avatar/1554531172507.png',
+            _id: 5ca84337ac62a23b28f0da8e,
+            username: 'ddd' },
+            commentNum: 1,
+            created: 2019-04-06T06:12:31.252Z,
+            updatedAt: 2019-04-06T06:12:40.916Z } ]
+     */
     await ctx.render('index',{
         session:ctx.session,
         title:"blog",
@@ -132,4 +138,38 @@ exports.details = async ctx=>{
         session:ctx.session
     })
 
+}
+
+//后台 获取用户的所有文章
+exports.articlelist = async ctx=>{
+    const uid = ctx.session.uid;
+    const data = await Article
+                            .find({author:uid});
+    ctx.body = {
+        code:0,
+        count:data.length,
+        data
+    }
+}
+
+//后台 删除用户文章
+exports.del = async ctx=>{
+    const articleId = ctx.params.id;
+    let res = {
+        state:1,
+        message:'删除成功'
+    };
+    await Article.findById(articleId)
+            .then(
+                //这里的data就是实例 会触发钩子
+                //data=>console.log(data)
+                data=>data.remove()
+            )
+            .catch(err=>{
+                res = {
+                    state:0,
+                    message:err
+                }
+            })
+    ctx.body = res;
 }
