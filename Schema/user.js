@@ -32,7 +32,9 @@ UserSchema.post('remove',document=>{
         .then(data=>data.forEach(item=>item.remove()))
     //删除用户头像
     //console.log(join(__dirname,"../public"+avatar))
-    fs.unlinkSync(join(__dirname,"../public"+avatar))
+    if("/avatar/default.jpg" !== avatar){
+        fs.unlinkSync(join(__dirname,"../public"+avatar))
+    }
     
 })
 
