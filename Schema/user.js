@@ -17,16 +17,23 @@ const UserSchema = new Schema({
 UserSchema.post('remove',document=>{
     const Article = require('../Models/article');
     const Comment = require('../Models/comment');
+    const fs = require('fs');
+    const {join} = require('path');
 
-    const {_id} = document;
+    const {_id,avatar} = document;
 
-    //删除所有文章
+    //删除所有文章与本文章对应的评论
     Article
         .find({author:_id})
         .then(data=>data.forEach(item=>item.remove()))
+    //删除该用户所有评论
     Comment
         .find({author:_id})
         .then(data=>data.forEach(item=>item.remove()))
+    //删除用户头像
+    //console.log(join(__dirname,"../public"+avatar))
+    fs.unlinkSync(join(__dirname,"../public"+avatar))
+    
 })
 
 module.exports = UserSchema

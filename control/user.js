@@ -1,6 +1,7 @@
 const Users = require('../Models/user');
 const encrypt = require('../utils/crypt');
-
+const fs = require('fs');
+const {join} = require('path');
 //用户注册
 exports.reg = async ( ctx )=>{
     // console.log('用户需要注册，注册的数据：');
@@ -171,8 +172,14 @@ exports.logout = ctx=>{
 exports.upload = async ctx=>{
     //console.log(ctx.req.file);
     const filename = ctx.req.file.filename;
-    let data = {}
-    await Users.update({_id:ctx.session.uid},{$set:{avatar:'/avatar/'+filename}},(err,res)=>{
+    let data = {};
+    const uArr = await Users.find({_id:ctx.session.uid})
+    //console.log(uArr[0].avatar);
+    //console.log("/avatar/default.jpg" === uArr[0].avatar)
+    if("/avatar/default.jpg" !== uArr[0].avatar){
+        fs.unlinkSync(join(__dirname,"../public"+uArr[0].avatar))
+    }
+    await Users.updateOne({_id:ctx.session.uid},{$set:{avatar:'/avatar/'+filename}},(err,res)=>{
         if(err){
             data={
                 status:0,
